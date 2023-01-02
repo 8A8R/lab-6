@@ -1,88 +1,126 @@
-class File:
-    className = 'File'
+class Employee:
     objectsCount = 0
+    def __init__(self, name, age, salary):
+        self.__name = name
+        self.__age = age
+        self.__salary = salary
+        self.__worked = 0
+        self.__teams = []
+        Employee.objectsCount = Employee.objectsCount + 1
 
-    def __init__(self, name, kbs, type):
-        self._name = name
-        self._kbs = kbs
-        self._type = type
-        File.objectsCount = File.objectsCount + 1
+    #Рассчитываем премию сотрудника
+    def calc_bonus(self, workdays):     #Считает премию
+        return self.__salary * self.get_bonus() / workdays * self.__worked
 
-    def get_name(self):
-        return self._name
+    def calc_salary(self, workdays):    #Считает зарплату
+        return self.__salary / workdays * self.__worked
 
-    def set_name(self, n):
-        self._name = n
+    def fire(self): #Увольняет работника (удаляет из всх групп)
+        while len(self.__teams)!=0:
+            self.__teams[0].remove(self)
+        print("Работник %s уволен" % (self.__name))
 
-    def get_kbs(self):
-        return self._kbs
+    def getname(self):  #Возвращает имя работника
+        return self.__name
 
-    def set_kbs(self, kbs):
-        if kbs > 0:
-            self._kbs = kbs
-        else:
-            self._kbs = 0.1
+    def work(self,n): #Добавляет n рабочих смен
+        self.__worked +=n
+        print("Работник %s отработал смену" % self.__name)
 
-    def type(self):
-        return self._type
+    def invite(self,team):  #Добавляет группу в список групп
+        self.__teams.append(team)
 
-    def info(self):
-        print(self._name)
-        print(f"Размер: {self._kbs} кб")
-        print(f'Формат: {self._type}')
+    def uninvite(self,team): #Удаляет группу из списка групп
+        self.__teams.remove(team)
 
-    def kbsToBytes(self):
-        print(f'Размер в байтах: {self._kbs * 1024}')
+    def get_bonus(self):
+        return 0.05
 
+class SeniorEmployee(Employee):
+    def __init__(self, name, age, salary, is_bearded):
+        self.is_bearded = is_bearded
+        super().__init__(name, age, salary)
 
-class Image(File):
-    className = 'Image'
+    def get_bonus(self):
+        return 0.1
+    pass
 
-    def __init__(self, name, kbs, type, height, width):
-        super().__init__(name, kbs, type)
-        self.height = height
-        self.width = width
-
-    def set_height(self, height):
-        if height > 0:
-            self.height = height
-        else:
-            self.height = 1
-
-    def set_width(self, width):
-        if width > 0:
-            self.width = width
-        else:
-            self.width = 1
-
-    def info(self):
-        super().info()
-        print(f'Тип: {Image.className}')
-        print(f"Высота (пкс): {self.height}")
-        print(f'Ширина (пкс): {self.width}')
-
-    def amount(self):
-        print(f'Площадь в пикселях: {self.height * self.width}')
-
-    def __eq__(self, other):
-        return self.height == other.height and self.width == other.width
+class Manager(Employee):
+    def __init__(self, name, age, salary, is_bald):
+        self.is_bald = is_bald
+        super().__init__(name, age, salary)
+    def get_bonus(self):
+        return 0.2
 
 
-b = File("Объект класса " + File.className, 11, 'TXT')
-b.info()
-b.kbsToBytes()
+class Team:
 
-print('\n')
+    def __init__(self, name, *args):
+        self.__members = []
+        self.teamname = name
+        for i in args:
+            self.add(i)
 
-im = Image('background.jpg', 44.1, 'JPG', 800, 600)
-im2 = Image('new_background.jpg', 42.8, 'JPG', 800, 600)
+    def add(self, other):   #Удаляет работника в группу
+        for i in self.__members:
+            if other == i:
+                print('Работник %s уже в команде!' %(other.getname()))
+                return
+        self.__members.append(other)
+        other.invite(self)
+        print("Работник %s добавлен в команду %s" %(other.getname(),self.teamname))
 
-im.amount()
-im.kbsToBytes()
+    def remove(self, member):   #Удаляет работника из группы
+        for i in self.__members:
+            if member == i:
+                self.__members.remove(i)
+                i.uninvite(self)
+                print('Работник %s удален из %s' %(i.getname(), self.teamname))
+                return
+        print('Работник не найден')
 
-if (im == im2) is True:
-    print(f'{im.get_name()} и {im2.get_name()} равны.')
-else:
-    print(f'{im.get_name()} и {im2.get_name()} не равны.')
+    def show_members(self): #Выводит всех работников данной группы
+        print("В команде %s следующие работники:" %(self.teamname))
+        for i in self.__members:
+            print(i.getname())
 
-print(f'Objects count: {File.objectsCount}')
+
+#Набираем работников
+se_001 = SeniorEmployee('Денис', 35, 40000, True)
+e_001 = Employee('Леонид', 26, 20000)
+e_002 = Employee('Виктор', 24, 20000)
+m_001 = Manager('Ипполит', 45, 100000, True)
+e_003 = Employee('Прокофий', 21, 20000)
+e_004 = Employee('Порфирий', 22, 20000)
+se_002 = SeniorEmployee('Арсений', 35, 40000, False)
+e_005 = Employee('Евгений', 25, 20000)
+e_006 = Employee('Василий', 24, 20000)
+#Собираем команду
+team_001 = Team("Отдел кадров",se_001,e_006)
+team_001.add(e_005)
+team_001.add(e_004)
+team_001.show_members()
+#Собираем еще команду
+team_002 = Team("Отдел продаж",se_002,e_003)
+team_002.add(e_001)
+team_002.add(e_004)
+#Пробуем добавить того же человека еще раз
+team_002.add(e_004)
+team_002.show_members()
+
+#Увольняем Порфирия и Дениса
+e_004.fire()
+se_001.fire()
+#Смотрим кто остался
+team_001.show_members()
+team_002.show_members()
+
+workdays = 30
+#Теперь пробуем
+e_001.work(30)
+se_002.work(30)
+m_001.work(30)
+
+print("Премия работника %s составляет %.2f рублей" %(e_001.getname(),e_001.calc_bonus(workdays)))
+print("Премия работника %s составляет %.2f рублей" %(se_002.getname(),se_002.calc_bonus(workdays)))
+print("Премия работника %s составляет %.2f рублей" %(m_001.getname(),m_001.calc_bonus(workdays)))
